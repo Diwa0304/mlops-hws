@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: iris-fastapi-app
-        image: us-central1-docker.pkg.dev/YOUR_PROJECT_ID/iris-repo/iris-fastapi-app:v1
+        image: us-central1-docker.pkg.dev/YOUR_PROJECT_ID/iris-repo/iris-fastapi-app:latest
         ports:
         - containerPort: 8000
 
