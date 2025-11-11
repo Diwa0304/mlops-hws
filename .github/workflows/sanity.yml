@@ -3,7 +3,6 @@ name: sanity_test
 on:
   workflow_dispatch:
   push:
-    branches: [dev]
   pull_request:
     branches: [main]
 permissions:
