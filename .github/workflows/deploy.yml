@@ -65,5 +65,9 @@ jobs:
     steps:
       - name: Install wrk
         run: sudo apt-get install wrk -y
+      - name: Get service IP
+        run: |
+           EXTERNAL_IP=$(kubectl get svc iris-fastapi-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+           echo "SERVICE_URL=http://$EXTERNAL_IP/predict" >> $GITHUB_ENV
       - name: Run stress test
         run: wrk -t4 -c1000 -d30s http://<service-url>/predict
