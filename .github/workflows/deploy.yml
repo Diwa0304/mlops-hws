@@ -48,7 +48,12 @@ jobs:
       run: |
         gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }}
         gcloud config set container/use_application_default_credentials true
-
+    
+    - name: Substitute Environment Variables in Manifest
+      run: |
+        # Replace the placeholder in the deployment YAML with the actual URI secret
+        sed -i "s|MLFLOW_TRACKING_URI_PLACEHOLDER|${{ secrets.MLFLOW_TRACKING_URI }}|g" k8s/deployment.yaml
+    
     - name: Deploy to GKE
       run: kubectl apply -f k8s/
 
