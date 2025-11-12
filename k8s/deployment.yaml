@@ -17,6 +17,13 @@ spec:
         image: us-central1-docker.pkg.dev/tough-study-473007-a5/artifacts-repo-mlops/iris-fastapi-app:latest
         ports:
         - containerPort: 8000
+        env:
+        - name: MLFLOW_TRACKING_URI
+          value: "MLFLOW_TRACKING_URI_PLACEHOLDER"
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            exec uvicorn app:app --host 0.0.0.0 --port 8000
         readinessProbe:
           httpGet:
             path: /health
