@@ -37,6 +37,7 @@ jobs:
         GCP_JSON: ${{ secrets.GCP_SA_KEY }}
         DATA_FILE: iris_2.csv
       run: |
+        cd data
         echo "$GCP_JSON" > gcp-key.json
         export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json
         dvc pull ${{env.DATA_FILE}}
