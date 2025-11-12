@@ -23,6 +23,8 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
         component_management: true 
+    - name: Install gke-gcloud-auth-plugin
+      run: gcloud components install gke-gcloud-auth-plugin --quiet
         
     - name: Authenticate Docker to Artifact Registry
       run: gcloud auth configure-docker us-central1-docker.pkg.dev
@@ -67,6 +69,8 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           component_management: true
+      - name: Install gke-gcloud-auth-plugin
+        run: gcloud components install gke-gcloud-auth-plugin --quiet
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
