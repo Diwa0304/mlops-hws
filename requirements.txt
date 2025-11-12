@@ -8,3 +8,4 @@ mlflow
 fastapi
 pydantic
 uvicorn
+opentelemetry-exporter-gcp-trace

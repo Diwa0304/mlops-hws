@@ -1,91 +1,58 @@
-import pandas as pd
 import mlflow
-import mlflow.sklearn
-from sklearn.metrics import accuracy_score
-import joblib
-import os
-import json
 from mlflow import MlflowClient
-import mlflow.pyfunc 
 from mlflow.exceptions import MlflowException
+import pandas as pd
+import numpy as np
+import os
+import joblib
 
 # change what model you want to use (registered model name)
 MODEL_NAME = "IRIS-Classifier-LogReg"
 
+# Use the environment variable set by Kubernetes, with a local fallback
 MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:8100")
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+client = MlflowClient()
 
-def fetch_and_load_latest_model(model_name: str):
+def fetch_and_load_best_model(model_name: str):
     """
-    Fetches the latest model version from the MLflow Model Registry and loads it.
-    """
-    model_uri = f"models:/{model_name}/latest"
-    print(f"Attempting to load latest model from URI: {model_uri}")
+    Fetches the model version currently marked as 'Production' in MLflow Registry and loads it.
     
+    This is the standard and most reliable method for deployment.
+    """
     try:
-        loaded_model = mlflow.pyfunc.load_model(model_uri)
-        print(f"Successfully loaded the latest model for '{model_name}'.")
-
-        return loaded_model
+        # Request only models currently marked as 'Production'
+        versions = client.get_latest_versions(model_name, stages=["Production"])
+        
+        if not versions:
+            # This is the error point we keep hitting. It means MLflow cannot find the Production stage.
+            raise ValueError(
+                f"No model versions found in 'Production' stage for registered model: {model_name}. "
+                "Ensure the model is explicitly transitioned to 'Production' in the MLflow UI."
+            )
+        
+        # Load the latest model version found in the Production stage
+        latest_version = versions[0]
+        model_uri = latest_version.source
+        
+        print(f"Loading model '{model_name}' version {latest_version.version}, stage: {latest_version.current_stage}")
+        
+        # Load the model directly from the artifact URI
+        model = mlflow.sklearn.load_model(model_uri)
+        return model
 
     except MlflowException as e:
-        print(f"Error loading model from registry: {e}")
-        print("Ensure the model name is correct, the MLflow Tracking Server is running, and the model is registered.")
-        return None
-      
-def fetch_and_load_best_model(model_name: str, metric_key: str = "accuracy"):
-    """
-    Fetches the model version with the highest value for a specific metric.
-    """
-    # mlflow.set_tracking_uri("http://127.0.0.1:8100")
-    client = MlflowClient()
-    
-    all_versions = client.search_model_versions(filter_string=f"name='{model_name}'")
-    if not all_versions:
-        raise ValueError(f"No model versions found for registered model: {model_name}")
-        
-    best_acc = -1.0
-    best_model_version = None
-        
-    for mv in all_versions:
-        try:
-            run = client.get_run(mv.run_id)
-            current_acc = run.data.metrics.get(metric_key, -2.0)
-            
-            if current_acc > best_acc:
-                best_acc = current_acc
-                best_model_version = mv.version
-                
-        except MlflowException as e:
-            print(f"Warning: Could not fetch run metrics for version {mv.version}: {e}")
-            continue
+        print(f"MLflow error while fetching model '{model_name}': {e}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error during model loading: {e}")
+        raise
 
-    if best_model_version is None or best_acc == -1.0:
-        raise MlflowException(f"Failed to find a suitable model version with metric '{metric_key}'.")
-
-    print(f"Best model found: Version {best_model_version} with {metric_key}={best_acc:.4f}")
-
-    model_uri = f"models:/{model_name}/{best_model_version}"
-    loaded_model = mlflow.pyfunc.load_model(model_uri)
-    return loaded_model
+# Placeholder function for compatibility with app.py's other calls
+def fetch_and_load_latest_model(model_name: str):
+    # For deployment, 'best' is defined as 'Production'
+    return fetch_and_load_best_model(model_name)
 
 def run_evaluation(model_type:str):
-    """
-    The main evaluation pipeline function.
-    """
-    if model_type=="latest":
-        model = fetch_and_load_latest_model(MODEL_NAME)
-    elif model_type=="best":
-        model = fetch_and_load_best_model(MODEL_NAME)
-    else:
-        print("model type can only be 'best' or 'latest'")
-
-    if model is None:
-        print("Evaluation pipeline aborted due to failure to load model.")
-        return
-    X_test = pd.read_csv("data/X_test.csv")
-    y_test = pd.read_csv("data/y_test.csv")
-
-    y_pred = model.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
-    return acc
+    # This is only a placeholder function to satisfy imports, it does nothing in the deployment API
+    pass
