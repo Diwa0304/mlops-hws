@@ -39,7 +39,7 @@ jobs:
       run: |
         echo "$GCP_JSON" > gcp-key.json
         export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcp-key.json
-        dvc pull data/${{env.DATA_FILE}}
+        dvc pull ${{env.DATA_FILE}}
         
     - name: Debug MLflow Connection
       env:
