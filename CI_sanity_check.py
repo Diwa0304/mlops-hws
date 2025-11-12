@@ -40,7 +40,7 @@ def fetch_and_load_best_model(model_name: str, metric_key: str = "accuracy"):
     return loaded_model
 
 def run_sanity_check():
-    model_name = "IRIS-Classifier-LogReg"
+    model_name = "logistic_regression"
     
     model = fetch_and_load_best_model(model_name)
     
